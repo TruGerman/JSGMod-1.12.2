@@ -1,7 +1,14 @@
 package tauri.dev.jsg.event;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.util.Tuple;
+import net.minecraftforge.common.config.Config;
+import net.minecraftforge.common.config.ConfigManager;
+import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import tauri.dev.jsg.JSG;
 import tauri.dev.jsg.block.JSGBlocks;
+import tauri.dev.jsg.config.JSGConfig;
 import tauri.dev.jsg.raycaster.RaycasterDHD;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,6 +29,11 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import tauri.dev.jsg.util.JSGUtil;
+import tauri.dev.jsg.worldgen.structures.EnumStructures;
+import tauri.dev.jsg.worldgen.structures.JSGStructuresGenerator;
+import tauri.dev.jsg.worldgen.structures.V1.StructureConfigTemplate;
+import tauri.dev.jsg.worldgen.structures.V1.StructureManager;
 
 import static tauri.dev.jsg.block.JSGBlocks.INVISIBLE_BLOCK;
 import static tauri.dev.jsg.block.JSGBlocks.IRIS_BLOCK;
@@ -91,5 +103,19 @@ public class JSGEventHandler {
 		if (IRIS_BLOCK.equals(block) || INVISIBLE_BLOCK.equals(block)) {
 			event.setCanceled(true);
 		}
+	}
+
+	@SubscribeEvent
+	public static void generateStructures(DecorateBiomeEvent.Post event)
+	{
+		ObjectArrayList<Tuple<StructureConfigTemplate, Float>> weightedList = StructureManager.getWeightedList(event.getWorld().getBiome(event.getPos()), event.getWorld().provider);
+		Tuple<StructureConfigTemplate, Float> selected = JSGUtil.getWeightedRandom(event.getRand(), weightedList, JSGConfig.WorldGen.structures.emptyChance);
+		if(selected != null) JSGStructuresGenerator.generateStructure(EnumStructures.getStructureByName(selected.getFirst().structureName), selected.getFirst(), event.getWorld(), event.getRand(), event.getChunkPos().x, event.getChunkPos().z, false, true, event.getWorld().provider.getDimension());
+	}
+
+	@SubscribeEvent
+	public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event)
+	{
+		if(event.getModID().equals(JSG.MOD_ID)) ConfigManager.sync(JSG.MOD_ID, Config.Type.INSTANCE);
 	}
 }

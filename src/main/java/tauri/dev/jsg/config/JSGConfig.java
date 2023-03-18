@@ -1373,26 +1373,9 @@ public class JSGConfig {
             })
             public boolean structuresRandomGeneratorEnabled = true;
 
-
-            @Config.Name("Chance of generating stargates in Overworld")
-            @Config.RequiresMcRestart
-            @Config.RangeDouble(min = 0, max = 1f)
-            @Config.SlidingOption
-            @Config.Comment({
-                    "CAN BE OVERRIDE IN STRUCTURES CONFIG FILE",
-                    "SIDE: SERVER"
-            })
-            public float stargateRGChanceOverworld = 0.0001f;
-
-            @Config.Name("Chance of generating stargates in End")
-            @Config.RequiresMcRestart
-            @Config.RangeDouble(min = 0, max = 1f)
-            @Config.SlidingOption
-            @Config.Comment({
-                    "CAN BE OVERRIDE IN STRUCTURES CONFIG FILE",
-                    "SIDE: SERVER"
-            })
-            public float stargateRGChanceTheEnd = 0.00007f;
+            @Config.Name("Structure empty chance")
+            @Config.Comment("Relative weight of \"nothing\" being selected when selecting a structure")
+            public float emptyChance = 1F;
         }
     }
 }

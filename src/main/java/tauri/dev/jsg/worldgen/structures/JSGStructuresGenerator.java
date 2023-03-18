@@ -8,12 +8,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
-import net.minecraft.world.chunk.IChunkProvider;
-import net.minecraft.world.gen.IChunkGenerator;
-import net.minecraftforge.fml.common.IWorldGenerator;
 import tauri.dev.jsg.JSG;
 import tauri.dev.jsg.config.JSGConfig;
 import tauri.dev.jsg.util.FacingHelper;
+import tauri.dev.jsg.worldgen.structures.V1.StructureConfigTemplate;
+import tauri.dev.jsg.worldgen.structures.V1.StructureManager;
 import tauri.dev.jsg.worldgen.structures.stargate.nether.JSGNetherStructure;
 import tauri.dev.jsg.worldgen.util.GeneratedStargate;
 import tauri.dev.jsg.worldgen.util.JSGStructurePos;
@@ -28,26 +27,11 @@ import static tauri.dev.jsg.worldgen.util.JSGWorldTopBlock.getTopBlock;
 /**
  * @author MrJake222
  */
-public class JSGStructuresGenerator implements IWorldGenerator {
-    @Override
-    public void generate(Random random, int chunkX, int chunkZ, World world, IChunkGenerator chunkGenerator, IChunkProvider chunkProvider) {
-        for (EnumStructures structure : EnumStructures.values()) {
-            if(world.getWorldType() == WorldType.FLAT) return;
-            if (structure.getActualStructure(world.provider.getDimension()).dimensionToSpawn == world.provider.getDimension()) {
-                if (structure.randomGeneratorEnabled()) {
-                    if (structure.getChance() > 0 && (random.nextFloat() < structure.getChance())) {
-                        JSGStructuresGenerator.generateStructure(structure, world, random, chunkX, chunkZ, false);
-                        return; // - if not -> causing cascading worldgen lag
-                    }
-                }
-            }
-        }
+public class JSGStructuresGenerator {
+    public static GeneratedStargate generateStructure(EnumStructures structure, StructureConfigTemplate template, World world, Random random, int chunkX, int chunkZ, boolean notRandomGen) {
+        return generateStructure(structure, template, world, random, chunkX, chunkZ, notRandomGen, true, structure.getActualStructure(0).dimensionToSpawn);
     }
-
-    public static GeneratedStargate generateStructure(EnumStructures structure, World world, Random random, int chunkX, int chunkZ, boolean notRandomGen) {
-        return generateStructure(structure, world, random, chunkX, chunkZ, notRandomGen, true, structure.getActualStructure(0).dimensionToSpawn);
-    }
-    public static GeneratedStargate generateStructure(EnumStructures structure, World world, Random random, int chunkX, int chunkZ, boolean notRandomGen, boolean notCommandGen, int dimId) {
+    public static GeneratedStargate generateStructure(EnumStructures structure, StructureConfigTemplate template, World world, Random random, int chunkX, int chunkZ, boolean notRandomGen, boolean notCommandGen, int dimId) {
         WorldServer worldToSpawn = Objects.requireNonNull(world.getMinecraftServer()).getWorld(dimId);
 
         if(structure.getActualStructure(dimId) instanceof JSGNetherStructure){
@@ -56,7 +40,7 @@ public class JSGStructuresGenerator implements IWorldGenerator {
 
         int x = (chunkX * 16) + (notCommandGen ? random.nextInt(15) : 0);
         int z = (chunkZ * 16) + (notCommandGen ? random.nextInt(15) : 0);
-        JSGStructurePos structurePos = checkForPlace(worldToSpawn, chunkX, chunkZ, structure, dimId);
+        JSGStructurePos structurePos = checkForPlace(worldToSpawn, chunkX, chunkZ, structure, template, dimId);
         if (notRandomGen && notCommandGen) {
             int tries = 0;
             while ((structurePos == null || structurePos.foundPos == null) && tries < 50) {
@@ -82,28 +66,16 @@ public class JSGStructuresGenerator implements IWorldGenerator {
                 chunkX = x / 16;
                 chunkZ = z / 16;
 
-                structurePos = JSGStructuresGenerator.checkForPlace(worldToSpawn, chunkX, chunkZ, structure, dimId);
+                structurePos = JSGStructuresGenerator.checkForPlace(worldToSpawn, chunkX, chunkZ, structure, template, dimId);
                 tries++;
             }
         }
 
         if (structurePos != null && structurePos.foundPos != null && structurePos.foundPos.getY() > 0) {
-            String biome = Objects.requireNonNull(worldToSpawn.getBiome(structurePos.foundPos).getRegistryName()).getResourcePath();
             if (worldToSpawn.getWorldType() != WorldType.FLAT || !notRandomGen) {
-                boolean contains = (structure.allowedInBiomes == null);
-                if (!contains) {
-                    for (String s : structure.allowedInBiomes) {
-                        if (biome.contains(s)) {
-                            contains = true;
-                            break;
-                        }
-                    }
-                }
-                if (contains) {
-                    if (notRandomGen || (structure.getActualStructure(dimId).isStargateStructure && JSGConfig.WorldGen.structures.stargateRandomGeneratorEnabled) ||
-                            (!structure.getActualStructure(dimId).isStargateStructure && JSGConfig.WorldGen.structures.structuresRandomGeneratorEnabled)) {
-                        return structure.getActualStructure(dimId).generateStructure(world, structurePos.foundPos, random, worldToSpawn);
-                    }
+                if (notRandomGen || (structure.getActualStructure(dimId).isStargateStructure && JSGConfig.WorldGen.structures.stargateRandomGeneratorEnabled) ||
+                        (!structure.getActualStructure(dimId).isStargateStructure && JSGConfig.WorldGen.structures.structuresRandomGeneratorEnabled)) {
+                    return structure.getActualStructure(dimId).generateStructure(world, structurePos.foundPos, random, worldToSpawn);
                 }
             }
         } else if(notRandomGen){
@@ -112,7 +84,7 @@ public class JSGStructuresGenerator implements IWorldGenerator {
         return null;
     }
 
-    public static JSGStructurePos checkForPlace(World world, int chunkX, int chunkZ, EnumStructures structure, int dimensionId) {
+    public static JSGStructurePos checkForPlace(World world, int chunkX, int chunkZ, EnumStructures structure, StructureConfigTemplate template, int dimensionId) {
         if (!world.getChunkProvider().isChunkGeneratedAt(chunkX, chunkZ)) {
             world.getChunkProvider().provideChunk(chunkX, chunkZ);
         }
@@ -139,7 +111,7 @@ public class JSGStructuresGenerator implements IWorldGenerator {
                         if (topBlock.y < lowestY) lowestY = topBlock.y;
                         if (topBlock.y > highestY) highestY = topBlock.y;
                         int step = Math.abs(topBlock.y - lowestY);
-                        if (structure.allowedOnBlocks == null || structure.allowedOnBlocks.contains(topBlock.topBlock)) {
+                        if (!template.isBlockWhitelist || StructureManager.allowedBlocks.get(template).contains(topBlock.topBlock)) {
                             topBlocksOk++;
                             if (step <= 4) {
                                 bestPositions.add(newPos);

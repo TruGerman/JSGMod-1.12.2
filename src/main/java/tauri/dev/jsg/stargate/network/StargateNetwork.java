@@ -15,6 +15,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 import tauri.dev.jsg.stargate.network.internalgates.StargateAddressesEnum;
 import tauri.dev.jsg.worldgen.structures.EnumStructures;
 import tauri.dev.jsg.worldgen.structures.JSGStructuresGenerator;
+import tauri.dev.jsg.worldgen.structures.V1.StructureManager;
 import tauri.dev.jsg.worldgen.util.GeneratedStargate;
 
 import javax.annotation.Nullable;
@@ -120,7 +121,7 @@ public class StargateNetwork extends WorldSavedData {
     }
 
     public static GeneratedStargate generateNetherGate(StargateNetwork network, World world, BlockPos pos){
-        GeneratedStargate stargate = JSGStructuresGenerator.generateStructure(EnumStructures.NETHER_MW, world, new Random(), pos.getX()/16/8, pos.getZ()/16/8, true);
+        GeneratedStargate stargate = JSGStructuresGenerator.generateStructure(EnumStructures.NETHER_MW, StructureManager.getDefaultNetherConfig(), world, new Random(), pos.getX()/16/8, pos.getZ()/16/8, true);
         if(stargate != null)
             network.setNetherGate(stargate.address);
 

@@ -12,13 +12,11 @@ import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import tauri.dev.jsg.JSG;
 import tauri.dev.jsg.advancements.JSGAdvancements;
-import tauri.dev.jsg.capability.CapabilityEnergyZPM;
 import tauri.dev.jsg.capability.endpoint.ItemEndpointCapability;
 import tauri.dev.jsg.chunkloader.ChunkLoadingCallback;
 import tauri.dev.jsg.config.JSGConfig;
 import tauri.dev.jsg.config.craftings.CraftingConfig;
 import tauri.dev.jsg.config.stargate.StargateSizeEnum;
-import tauri.dev.jsg.config.structures.StructureConfig;
 import tauri.dev.jsg.datafixer.TileNamesFixer;
 import tauri.dev.jsg.gui.JSGGuiHandler;
 import tauri.dev.jsg.integration.OCWrapperInterface;
@@ -28,8 +26,6 @@ import tauri.dev.jsg.machine.chamber.CrystalChamberRecipes;
 import tauri.dev.jsg.machine.orewashing.OreWashingRecipes;
 import tauri.dev.jsg.machine.pcbfabricator.PCBFabricatorRecipes;
 import tauri.dev.jsg.worldgen.JSGOresGenerator;
-import tauri.dev.jsg.worldgen.structures.EnumStructures;
-import tauri.dev.jsg.worldgen.structures.JSGStructuresGenerator;
 
 public class JSGInit {
 
@@ -39,7 +35,7 @@ public class JSGInit {
     @SuppressWarnings("unused")
     public static void init(FMLInitializationEvent event) {
         GameRegistry.registerWorldGenerator(new JSGOresGenerator(), 0);
-        GameRegistry.registerWorldGenerator(new JSGStructuresGenerator(), 0);
+        //GameRegistry.registerWorldGenerator(new JSGStructuresGenerator(), 0);
         JSG.info("Successfully registered World Generation!");
 
         NetworkRegistry.INSTANCE.registerGuiHandler(JSG.instance, new JSGGuiHandler());
@@ -70,12 +66,6 @@ public class JSGInit {
 
         CraftingConfig.load(JSG.modConfigDir);
         JSG.info("Successfully loaded CraftingConfig!");
-
-        // Structures config
-        EnumStructures.initConfig();
-
-        StructureConfig.load(JSG.modConfigDir);
-        JSG.info("Successfully loaded StructureConfig!");
 
         StargateSizeEnum.init();
         JSG.info("Successfully registered Stargate sizes!");
