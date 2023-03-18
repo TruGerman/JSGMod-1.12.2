@@ -22,6 +22,7 @@ import tauri.dev.jsg.loader.ReloadListener;
 import tauri.dev.jsg.proxy.IProxy;
 import tauri.dev.jsg.util.main.loader.JSGInit;
 import tauri.dev.jsg.util.main.loader.JSGPreInit;
+import tauri.dev.jsg.worldgen.structures.V1.StructureManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -164,6 +165,7 @@ public class JSG {
             throw new LoaderException("Found two same mods! Just Stargate Mod and The Aunis mod are the SAME mods!");
         }
 
+        StructureManager.init();
         JSGInit.init(event);
         JSG.proxy.init(event);
     }

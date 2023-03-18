@@ -4,11 +4,14 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import tauri.dev.jsg.JSG;
 import tauri.dev.jsg.config.JSGConfig;
 import tauri.dev.jsg.stargate.network.SymbolTypeEnum;
 import tauri.dev.jsg.worldgen.structures.EnumStructures;
+import tauri.dev.jsg.worldgen.structures.V1.StructureConfigTemplate;
+import tauri.dev.jsg.worldgen.structures.V1.StructureManager;
 import tauri.dev.jsg.worldgen.util.GeneratedStargate;
 import tauri.dev.jsg.worldgen.util.JSGStructurePos;
 import tauri.dev.jsg.worldgen.structures.JSGStructuresGenerator;
@@ -77,10 +80,11 @@ public class StargateGenerator {
             if (y > 240)
                 continue;
 
-            String biomeName = Objects.requireNonNull(worldToSpawn.getBiome(new BlockPos(x, y, z)).getRegistryName()).getResourcePath();
-            structure = EnumStructures.getStargateStructureByBiome(biomeName, symbolType, dimensionToSpawn);
+            Biome biome = Objects.requireNonNull(worldToSpawn.getBiome(new BlockPos(x, y, z)));
+            StructureConfigTemplate template = StructureManager.getRandomGateForBiome(biome, symbolType, pWorld);
+            structure = template == null ? null : EnumStructures.getStructureByName(template.structureName);
             if (structure != null) {
-                structurePos = JSGStructuresGenerator.checkForPlace(worldToSpawn, chunkX, chunkZ, structure, dimensionToSpawn);
+                structurePos = JSGStructuresGenerator.checkForPlace(worldToSpawn, chunkX, chunkZ, structure, template, dimensionToSpawn);
             }
             if(structurePos != null && structurePos.bestAttemptPos != null)
                 bestCount++;

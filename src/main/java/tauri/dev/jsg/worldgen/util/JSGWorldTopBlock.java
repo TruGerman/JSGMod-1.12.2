@@ -5,6 +5,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import javax.annotation.Nullable;
 
@@ -20,8 +21,9 @@ public class JSGWorldTopBlock {
 
     @Nullable
     public static JSGWorldTopBlock getTopBlock(World world, int x, int z, int airCountUp, int dimensionId) {
-        int y = (dimensionId == -1 ? 0 : world.getHeight());
-        while (((dimensionId != -1 && y > 0) || (dimensionId == -1 && y < world.getHeight()))) {
+        boolean isSurfaceWorld = FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(dimensionId).provider.isSurfaceWorld();
+        int y = (isSurfaceWorld ? world.getHeight() : 0);
+        while (((isSurfaceWorld && y > 0) || (!isSurfaceWorld && y < world.getHeight()))) {
             if(y < 240) {
                 BlockPos pos = new BlockPos(x, y, z);
                 Block block = world.getBlockState(pos).getBlock();
@@ -36,7 +38,7 @@ public class JSGWorldTopBlock {
                 if (!block.isReplaceable(world, pos) && isAirUp && canBeTopBlock(block))
                     return new JSGWorldTopBlock(y, block, world.getBlockState(pos));
             }
-            y += (dimensionId == -1 ? 1 : -1);
+            y += (isSurfaceWorld ? -1 : +1);
         }
         return null;
     }
